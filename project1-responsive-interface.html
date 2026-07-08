@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>easyfind — Responsive Frontend Interface | DecodeLabs Project 1</title>
+<meta name="description" content="A responsive, accessible frontend interface for a student room-booking app — built with semantic HTML5, CSS Grid, Flexbox and vanilla JavaScript.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  /* ============================================================
+     PILLAR 2 — VISUAL DESIGN & 2025 AESTHETICS
+     Palette: Mocha Mousse (stability) / Ethereal Blue (trust) / Moonlit Grey (refinement)
+     Typography: Montserrat (headlines) + Open Sans (body) — 2 families, 3 weights max
+     ============================================================ */
+  :root{
+    --mocha:#A5856F;
+    --mocha-dark:#5C4632;   /* darkened for AA text contrast on light bg */
+    --blue:#A0D4E0;
+    --blue-dark:#2E6470;    /* darkened for AA text contrast */
+    --grey:#F2F0EA;
+    --ink:#2A2520;
+    --ink-soft:#6B6259;
+    --surface:#FFFFFF;
+    --line:#E2DCD2;
+    --danger:#B3402E;
+    --focus:#2E6470;
+
+    --font-head:'Montserrat', sans-serif;
+    --font-body:'Open Sans', sans-serif;
+
+    /* fluid type scale — clamp(min, preferred, max) */
+    --fs-hero: clamp(1.9rem, 1.4rem + 2.2vw, 3.1rem);
+    --fs-h2:   clamp(1.4rem, 1.2rem + 1vw, 1.9rem);
+    --fs-h3:   clamp(1.05rem, 1rem + 0.4vw, 1.2rem);
+    --fs-body: clamp(0.95rem, 0.92rem + 0.15vw, 1rem);
+
+    --radius: 12px;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:var(--font-body);
+    font-weight:400;
+    color:var(--ink);
+    background:var(--grey);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:var(--font-head);font-weight:700;line-height:1.15;color:var(--mocha-dark);}
+  h3{font-weight:600;}
+  img{display:block;max-width:100%;}
+  a{color:inherit;}
+  button, input, select{font-family:inherit;font-size:inherit;}
+
+  /* ============================================================
+     ACCESSIBILITY — skip link, focus rings (WCAG / Universal Access)
+     ============================================================ */
+  .skip-link{
+    position:absolute;left:-999px;top:auto;
+    background:var(--mocha-dark);color:#fff;padding:10px 16px;border-radius:0 0 8px 0;
+    z-index:200;font-weight:600;
+  }
+  .skip-link:focus{left:0;top:0;}
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible{
+    outline:3px solid var(--focus);outline-offset:2px;border-radius:4px;
+  }
+  .visually-hidden{
+    position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;
+  }
+
+  /* ============================================================
+     PILLAR 3 — IMPLEMENTATION: PAGE-LEVEL CSS GRID (macro layout)
+     header / nav / main / footer as a strict 2D floor-plan
+     ============================================================ */
+  .page{
+    display:grid;
+    grid-template-columns:1fr;
+    grid-template-areas:
+      "header"
+      "main"
+      "footer";
+    min-height:100vh;
+  }
+  header.site{ grid-area:header; }
+  main{ grid-area:main; }
+  footer.site{ grid-area:footer; }
+
+  /* ===== HEADER / NAV (Flexbox — micro component) ===== */
+  header.site{
+    background:var(--surface);
+    border-bottom:1px solid var(--line);
+    position:sticky;top:0;z-index:50;
+  }
+  .nav-bar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:14px 20px;
+    max-width:1180px;
+    margin:0 auto;
+  }
+  .brand{
+    display:flex;align-items:center;gap:8px;
+    font-family:var(--font-head);font-weight:700;font-size:1.25rem;color:var(--mocha-dark);
+  }
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--blue-dark);display:inline-block;}
+
+  .nav-toggle{
+    display:flex;flex-direction:column;justify-content:center;gap:5px;
+    width:38px;height:38px;border-radius:8px;border:1px solid var(--line);
+  }
+  .nav-toggle span{display:block;width:18px;height:2px;background:var(--ink);margin:0 auto;}
+
+  nav.primary-nav{
+    /* mobile-first: hidden by default, JS toggles .open */
+    display:none;
+    flex-direction:column;
+    gap:4px;
+    width:100%;
+    padding:10px 20px 16px;
+    background:var(--surface);
+  }
+  nav.primary-nav.open{ display:flex; }
+  nav.primary-nav ul{
+    list-style:none;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  nav.primary-nav a{
+    display:block;text-decoration:none;font-weight:600;font-size:0.95rem;
+    padding:10px 8px;border-radius:8px;
+  }
+  nav.primary-nav a:hover{ background:var(--grey); }
+
+  /* ============================================================
+     HERO — fluid typography via clamp()
+     ============================================================ */
+  .hero{
+    padding:36px 20px 30px;
+    max-width:1180px;margin:0 auto;
+  }
+  .hero h1{ font-size:var(--fs-hero); margin-bottom:14px; letter-spacing:-0.01em; }
+  .hero h1 em{ font-style:italic; color:var(--blue-dark); }
+  .hero p{
+    font-size:var(--fs-body);
+    color:var(--ink-soft);
+    max-width:54ch;
+    margin-bottom:22px;
+  }
+
+  /* search form — Flexbox row, wraps mobile-first */
+  .search-form{
+    display:flex;flex-wrap:wrap;gap:10px;
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px;
+  }
+  .search-form .field{
+    display:flex;flex-direction:column;gap:4px;
+    flex:1 1 140px;
+  }
+  .search-form label{
+    font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--ink-soft);
+  }
+  .search-form select, .search-form input{
+    border:1px solid var(--line);border-radius:8px;padding:9px 10px;background:#fff;color:var(--ink);
+  }
+  .search-form button{
+    flex:1 1 100%;
+    background:var(--mocha-dark);color:#fff;font-weight:600;
+    border-radius:8px;padding:11px;
+  }
+  .search-form button:hover{ background:#3F3122; }
+
+  /* ============================================================
+     MAIN CONTENT — Grid macro layout: sidebar (filters) + content
+     mobile-first: single column; min-width media queries expand
+     ============================================================ */
+  .content-grid{
+    max-width:1180px;margin:0 auto;
+    padding:8px 20px 50px;
+    display:grid;
+    grid-template-columns:1fr;     /* mobile: stacked */
+    gap:24px;
+  }
+
+  aside.filters{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px;
+    align-self:start;
+  }
+  aside.filters h2{ font-size:var(--fs-h3); margin-bottom:12px; }
+  .filter-group{ margin-bottom:16px; }
+  .filter-group h3{
+    font-size:0.78rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--ink-soft);
+    margin-bottom:8px;font-family:var(--font-body);font-weight:600;
+  }
+  .chip-row{ display:flex;flex-wrap:wrap;gap:8px; }
+  .chip{
+    padding:7px 13px;border-radius:20px;border:1px solid var(--line);
+    background:#fff;font-size:0.82rem;font-weight:500;color:var(--ink-soft);
+  }
+  .chip[aria-pressed="true"]{ background:var(--blue-dark);color:#fff;border-color:var(--blue-dark); }
+
+  section.listings h2{ font-size:var(--fs-h2); margin-bottom:4px; }
+  section.listings > p{ color:var(--ink-soft);font-size:0.9rem;margin-bottom:18px; }
+
+  /* listing card grid — mobile-first 1 col, grows with breakpoints below */
+  .card-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:16px;
+  }
+
+  article.card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;
+    display:flex;flex-direction:column;
+  }
+  .card-media{
+    height:140px;position:relative;
+    background:linear-gradient(135deg,var(--mocha),var(--blue));
+  }
+  .badge-verified{
+    position:absolute;top:10px;right:10px;
+    background:#fff;color:var(--blue-dark);font-size:0.68rem;font-weight:700;
+    padding:4px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.03em;
+  }
+  .card-body{ padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1; }
+  .card-body h3{ font-size:var(--fs-h3); }
+  .card-loc{ font-size:0.84rem;color:var(--ink-soft); }
+  .card-tags{ display:flex;flex-wrap:wrap;gap:6px; }
+  .card-tags span{
+    font-size:0.72rem;background:var(--grey);color:var(--ink-soft);
+    padding:3px 8px;border-radius:6px;
+  }
+  .card-footer{
+    margin-top:auto;
+    display:flex;align-items:center;justify-content:space-between;
+    border-top:1px solid var(--line);padding-top:10px;
+  }
+  .price{ font-weight:700;font-size:1.02rem;color:var(--mocha-dark); }
+  .price span{ font-weight:400;font-size:0.75rem;color:var(--ink-soft); }
+
+  .save-btn{
+    display:flex;align-items:center;gap:6px;
+    border:1px solid var(--line);border-radius:8px;padding:7px 12px;
+    font-size:0.82rem;font-weight:600;
+  }
+  .save-btn[aria-pressed="true"]{ background:var(--mocha-dark);color:#fff;border-color:var(--mocha-dark); }
+
+  .empty-state{
+    grid-column:1/-1;
+    text-align:center;color:var(--ink-soft);
+    padding:40px 16px;background:var(--surface);border:1px dashed var(--line);border-radius:var(--radius);
+  }
+
+  /* live region for screen readers announcing result counts */
+  .result-count{ font-size:0.85rem;color:var(--ink-soft); }
+
+  /* ============================================================
+     FOOTER — Flexbox
+     ============================================================ */
+  footer.site{
+    background:var(--mocha-dark);color:#EFE7DC;
+    padding:30px 20px 22px;
+  }
+  .footer-inner{
+    max-width:1180px;margin:0 auto;
+    display:flex;flex-direction:column;gap:14px;
+  }
+  .footer-inner .brand{ color:#fff; }
+  .footer-bottom{
+    display:flex;flex-direction:column;gap:6px;
+    font-size:0.78rem;color:#D8CBBA;
+    border-top:1px solid #6E5A45;padding-top:14px;
+  }
+
+  /* ============================================================
+     MOBILE-FIRST BREAKPOINTS
+     Tablet: min-width 768px | Desktop: min-width 1024px
+     ============================================================ */
+  @media (min-width:768px){
+    .nav-toggle{ display:none; }
+    nav.primary-nav{
+      display:flex !important;
+      flex-direction:row;
+      width:auto;padding:0;background:transparent;
+    }
+    nav.primary-nav ul{ flex-direction:row;gap:6px; }
+
+    .search-form .field{ flex:1 1 0; }
+    .search-form button{ flex:0 0 auto;padding:11px 24px; }
+
+    .card-grid{ grid-template-columns:repeat(2,1fr); }
+
+    .footer-inner{ flex-direction:row;justify-content:space-between;align-items:flex-start; }
+    .footer-bottom{ border-top:none;padding-top:0; }
+  }
+
+  @media (min-width:1024px){
+    .content-grid{
+      grid-template-columns:260px 1fr;  /* sidebar + main content */
+      align-items:start;
+    }
+    .card-grid{ grid-template-columns:repeat(2,1fr); }
+    .hero{ padding-top:54px; }
+  }
+
+  @media (min-width:1280px){
+    .card-grid{ grid-template-columns:repeat(3,1fr); }
+  }
+
+  /* respect reduced-motion preference */
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+  }
+</style>
+</head>
+<body>
+
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<div class="page">
+
+  <!-- ============== HEADER / NAV (semantic landmarks) ============== -->
+  <header class="site">
+    <div class="nav-bar">
+      <a class="brand" href="#main-content"><span class="dot" aria-hidden="true"></span>easyfind</a>
+      <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="primary-nav" aria-label="Open menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <nav class="primary-nav" id="primary-nav" aria-label="Primary">
+      <ul>
+        <li><a href="#listings">Browse rooms</a></li>
+        <li><a href="#filters-heading">Filters</a></li>
+        <li><a href="#how-it-works">How it works</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- ============== MAIN ============== -->
+  <main id="main-content">
+
+    <section class="hero" aria-labelledby="hero-heading">
+      <h1 id="hero-heading">Find a room that doesn't <em>feel like a gamble.</em></h1>
+      <p>A responsive interface for searching verified student PGs, hostels and shared rooms — built with semantic HTML5, CSS Grid, Flexbox and a mobile-first layout.</p>
+
+      <form class="search-form" id="search-form">
+        <div class="field">
+          <label for="f-city">City</label>
+          <select id="f-city" name="city">
+            <option value="">Any city</option>
+            <option>Prayagraj</option>
+            <option>Lucknow</option>
+            <option>Varanasi</option>
+            <option>Delhi</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-type">Room type</label>
+          <select id="f-type" name="type">
+            <option value="">Any type</option>
+            <option>PG</option>
+            <option>Hostel</option>
+            <option>Shared room</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-budget">Max budget</label>
+          <input type="number" id="f-budget" name="budget" placeholder="e.g. 8000" min="0" step="500" inputmode="numeric">
+        </div>
+        <button type="submit">Search rooms</button>
+      </form>
+    </section>
+
+    <div class="content-grid" id="listings">
+
+      <!-- ============== SIDEBAR FILTERS (article/aside landmark) ============== -->
+      <aside class="filters" aria-labelledby="filters-heading">
+        <h2 id="filters-heading">Room type</h2>
+        <div class="filter-group">
+          <h3>Filter by type</h3>
+          <div class="chip-row" id="type-chips" role="group" aria-label="Filter by room type">
+            <button class="chip" data-type="" aria-pressed="true">All</button>
+            <button class="chip" data-type="PG" aria-pressed="false">PG</button>
+            <button class="chip" data-type="Hostel" aria-pressed="false">Hostel</button>
+            <button class="chip" data-type="Shared room" aria-pressed="false">Shared room</button>
+          </div>
+        </div>
+        <div class="filter-group">
+          <h3>Only show</h3>
+          <div class="chip-row">
+            <button class="chip" id="verified-only" aria-pressed="false">Verified only</button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ============== LISTINGS (main content) ============== -->
+      <section class="listings" aria-labelledby="listings-heading">
+        <h2 id="listings-heading">Rooms near you</h2>
+        <p class="result-count" id="result-count" role="status" aria-live="polite">Showing 6 verified and pending listings</p>
+
+        <div class="card-grid" id="card-grid">
+          <!-- articles injected by JS -->
+        </div>
+      </section>
+    </div>
+
+    <section id="how-it-works" class="content-grid" style="padding-top:0;" aria-labelledby="how-heading">
+      <div></div>
+      <article style="background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px;">
+        <h2 id="how-heading" style="font-size:var(--fs-h2);margin-bottom:14px;">How booking works</h2>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div>
+            <h3 style="font-size:var(--fs-h3);margin-bottom:4px;">1. Search and shortlist</h3>
+            <p style="color:var(--ink-soft);font-size:0.9rem;">Filter by city, type and budget. Save the ones you like with the heart button.</p>
+          </div>
+          <div>
+            <h3 style="font-size:var(--fs-h3);margin-bottom:4px;">2. Reserve with a token</h3>
+            <p style="color:var(--ink-soft);font-size:0.9rem;">Hold your room with a small refundable token instead of a full upfront payment.</p>
+          </div>
+          <div>
+            <h3 style="font-size:var(--fs-h3);margin-bottom:4px;">3. Move in, or get refunded</h3>
+            <p style="color:var(--ink-soft);font-size:0.9rem;">Confirm the room in person. Mismatches are refunded automatically.</p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+  </main>
+
+  <!-- ============== FOOTER ============== -->
+  <footer class="site">
+    <div class="footer-inner">
+      <a class="brand" href="#main-content"><span class="dot" aria-hidden="true"></span>easyfind</a>
+      <div class="footer-bottom">
+        <p>© 2026 easyfind. DecodeLabs Full Stack Internship — Project 1: Responsive Frontend Interface.</p>
+        <p>Built with semantic HTML5, CSS Grid, Flexbox and vanilla JavaScript. No frameworks.</p>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+/* ============================================================
+   PILLAR 3 — LOGIC: state management & interactivity (vanilla JS)
+   ============================================================ */
+
+/* ---- data (would come from an API in a real backend) ---- */
+const rooms = [
+  {id:1, name:"Sunrise Boys PG", type:"PG", city:"Prayagraj", area:"Civil Lines", price:6500, verified:true, tags:["Wifi","Meals included","Laundry"]},
+  {id:2, name:"Ganga View Girls Hostel", type:"Hostel", city:"Prayagraj", area:"Tagore Town", price:8000, verified:true, tags:["Wifi","Meals included","CCTV"]},
+  {id:3, name:"Hive Co-living Shared Room", type:"Shared room", city:"Lucknow", area:"Hazratganj", price:7200, verified:true, tags:["Wifi","AC","Gym access"]},
+  {id:4, name:"Annapurna PG for Boys", type:"PG", city:"Lucknow", area:"Aliganj", price:5800, verified:false, tags:["Meals included","Power backup"]},
+  {id:5, name:"Riverside Private Room", type:"Hostel", city:"Varanasi", area:"Lanka", price:11000, verified:true, tags:["Wifi","AC","Balcony"]},
+  {id:6, name:"Scholars Den Hostel", type:"Hostel", city:"Varanasi", area:"Sigra", price:6900, verified:true, tags:["Wifi","Study hall","Laundry"]},
+];
+
+/* ---- application state ---- */
+const state = {
+  city: "",
+  type: "",
+  maxBudget: null,
+  verifiedOnly: false,
+  saved: new Set(),
+};
+
+/* ---- mobile nav toggle (state: open/closed) ---- */
+const navToggle = document.getElementById('nav-toggle');
+const primaryNav = document.getElementById('primary-nav');
+navToggle.addEventListener('click', () => {
+  const isOpen = primaryNav.classList.toggle('open');
+  navToggle.setAttribute('aria-expanded', String(isOpen));
+  navToggle.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+});
+
+/* close mobile nav automatically once viewport reaches tablet breakpoint */
+const tabletQuery = window.matchMedia('(min-width: 768px)');
+tabletQuery.addEventListener('change', () => {
+  primaryNav.classList.remove('open');
+  navToggle.setAttribute('aria-expanded', 'false');
+});
+
+/* ---- render listing cards from state ---- */
+function renderCards(){
+  const grid = document.getElementById('card-grid');
+  const filtered = rooms.filter(r => {
+    if(state.city && r.city !== state.city) return false;
+    if(state.type && r.type !== state.type) return false;
+    if(state.maxBudget && r.price > state.maxBudget) return false;
+    if(state.verifiedOnly && !r.verified) return false;
+    return true;
+  });
+
+  document.getElementById('result-count').textContent =
+    `Showing ${filtered.length} of ${rooms.length} listings`;
+
+  if(filtered.length === 0){
+    grid.innerHTML = `<p class="empty-state">No rooms match those filters. Try widening your budget or clearing a filter.</p>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(r => `
+    <article class="card" aria-labelledby="card-${r.id}-title">
+      <div class="card-media">
+        ${r.verified ? '<span class="badge-verified">Verified</span>' : ''}
+      </div>
+      <div class="card-body">
+        <h3 id="card-${r.id}-title">${r.name}</h3>
+        <p class="card-loc">${r.area}, ${r.city}</p>
+        <div class="card-tags">${r.tags.map(t => `<span>${t}</span>`).join('')}</div>
+        <div class="card-footer">
+          <p class="price">₹${r.price.toLocaleString('en-IN')}<span> /month</span></p>
+          <button class="save-btn" data-id="${r.id}" aria-pressed="${state.saved.has(r.id)}">
+            <span aria-hidden="true">${state.saved.has(r.id) ? '♥' : '♡'}</span>
+            <span>${state.saved.has(r.id) ? 'Saved' : 'Save'}</span>
+          </button>
+        </div>
+      </div>
+    </article>
+  `).join('');
+
+  /* wire up the freshly rendered save buttons */
+  grid.querySelectorAll('.save-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = Number(btn.dataset.id);
+      if(state.saved.has(id)) state.saved.delete(id); else state.saved.add(id);
+      renderCards();
+    });
+  });
+}
+
+/* ---- type filter chips ---- */
+document.getElementById('type-chips').addEventListener('click', (e) => {
+  const chip = e.target.closest('.chip');
+  if(!chip) return;
+  document.querySelectorAll('#type-chips .chip').forEach(c => c.setAttribute('aria-pressed','false'));
+  chip.setAttribute('aria-pressed','true');
+  state.type = chip.dataset.type;
+  renderCards();
+});
+
+/* ---- verified-only toggle ---- */
+const verifiedToggle = document.getElementById('verified-only');
+verifiedToggle.addEventListener('click', () => {
+  state.verifiedOnly = !state.verifiedOnly;
+  verifiedToggle.setAttribute('aria-pressed', String(state.verifiedOnly));
+  renderCards();
+});
+
+/* ---- search form ---- */
+document.getElementById('search-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  state.city = document.getElementById('f-city').value;
+  const budgetVal = document.getElementById('f-budget').value;
+  state.maxBudget = budgetVal ? Number(budgetVal) : null;
+  /* keep type chips in sync with the dropdown too */
+  const typeVal = document.getElementById('f-type').value;
+  state.type = typeVal;
+  document.querySelectorAll('#type-chips .chip').forEach(c => {
+    c.setAttribute('aria-pressed', String(c.dataset.type === typeVal));
+  });
+  renderCards();
+  document.getElementById('listings').scrollIntoView({behavior:'smooth'});
+});
+
+/* ---- initial render ---- */
+renderCards();
+</script>
+
+</body>
+</html>
